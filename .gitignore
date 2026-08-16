@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+
+# Node
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+next-env.d.ts
+
+# Secrets and local config
+.env
+.env.local
+!.env.example
+!.env.local.example
+
+# Data
+data/
+*.pdf
+!docs/**/*.pdf
+
+# OS / editors
+.DS_Store
+.idea/
+.vscode/

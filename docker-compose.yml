@@ -1,0 +1,22 @@
+# Local PostgreSQL only. The API and dashboard run directly on your machine so
+# you keep fast reloads while building.
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: aeas-db
+    environment:
+      POSTGRES_USER: aeas
+      POSTGRES_PASSWORD: aeas
+      POSTGRES_DB: aeas
+    ports:
+      - "5432:5432"
+    volumes:
+      - aeas-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aeas"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  aeas-pgdata:

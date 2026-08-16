@@ -1,0 +1,349 @@
+/* ---------------------------------------------------------------------------
+   AEAS design tokens.
+
+   The dashboard is an instrument, not a marketing page: cool sage ground,
+   forest ink, and three status colours that are only ever used to mean
+   something. Numbers are set in a monospace face with tabular figures so
+   readings don't jitter as they update.
+--------------------------------------------------------------------------- */
+
+:root {
+  --ground: #f1f3ee;
+  --surface: #ffffff;
+  --ink: #16231d;
+  --muted: #6b7a72;
+  --rule: #d6dcd4;
+
+  --calm: #2f6f5e;   /* healthy / buy */
+  --watch: #b8892e;  /* hold with pressure */
+  --risk: #a33b2a;   /* sell */
+
+  --display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --body: "Source Sans 3", system-ui, -apple-system, sans-serif;
+  --data: "IBM Plex Mono", ui-monospace, "SFMono-Regular", monospace;
+
+  --gutter: clamp(1.25rem, 4vw, 3rem);
+  --radius: 3px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: 16px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible {
+  outline: 2px solid var(--calm);
+  outline-offset: 3px;
+}
+
+/* --- Shell ---------------------------------------------------------------- */
+
+.shell {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: var(--gutter);
+}
+
+.masthead {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.5rem;
+  align-items: baseline;
+  justify-content: space-between;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--rule);
+}
+
+.masthead h1 {
+  font-family: var(--display);
+  font-size: clamp(1.5rem, 3.5vw, 2rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.eyebrow {
+  font-family: var(--data);
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* --- Panels --------------------------------------------------------------- */
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  padding: clamp(1rem, 3vw, 1.75rem);
+  margin-top: 1.5rem;
+}
+
+.panel-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.panel-head h2 {
+  font-family: var(--display);
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+/* --- Headline reading ----------------------------------------------------- */
+
+.reading {
+  display: flex;
+  align-items: flex-end;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.reading-value {
+  font-family: var(--data);
+  font-size: clamp(3rem, 12vw, 5rem);
+  font-weight: 500;
+  line-height: 0.9;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+}
+
+.signal-tag {
+  font-family: var(--data);
+  font-size: 0.75rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  padding: 0.35rem 0.6rem;
+  border: 1px solid currentColor;
+  border-radius: var(--radius);
+}
+
+.signal-buy { color: var(--calm); }
+.signal-hold { color: var(--watch); }
+.signal-sell { color: var(--risk); }
+
+/* --- Signature: the threshold rail ---------------------------------------- */
+
+.rail {
+  margin-top: 2rem;
+}
+
+.rail-track {
+  position: relative;
+  height: 14px;
+  background: linear-gradient(
+    to right,
+    color-mix(in srgb, var(--risk) 18%, transparent) 0%,
+    color-mix(in srgb, var(--risk) 18%, transparent) 35%,
+    color-mix(in srgb, var(--watch) 14%, transparent) 35%,
+    color-mix(in srgb, var(--watch) 14%, transparent) 70%,
+    color-mix(in srgb, var(--calm) 18%, transparent) 70%,
+    color-mix(in srgb, var(--calm) 18%, transparent) 100%
+  );
+  border: 1px solid var(--rule);
+  border-radius: 1px;
+}
+
+.rail-gate {
+  position: absolute;
+  top: -6px;
+  bottom: -6px;
+  width: 1px;
+  background: var(--ink);
+}
+
+.rail-gate span {
+  position: absolute;
+  top: -1.35rem;
+  left: 0;
+  transform: translateX(-50%);
+  font-family: var(--data);
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.rail-marker {
+  position: absolute;
+  top: -10px;
+  bottom: -10px;
+  width: 3px;
+  background: var(--ink);
+  transform: translateX(-1.5px);
+  transition: left 480ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.rail-notches {
+  position: relative;
+  height: 46px;
+  margin-top: 0.4rem;
+}
+
+.rail-notch {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  text-align: center;
+}
+
+.rail-notch i {
+  display: block;
+  width: 1px;
+  height: 10px;
+  margin: 0 auto;
+  background: var(--muted);
+}
+
+.rail-notch b {
+  display: block;
+  font-family: var(--data);
+  font-size: 0.6rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  margin-top: 0.2rem;
+}
+
+/* --- Component table ------------------------------------------------------ */
+
+.components {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.components th {
+  text-align: left;
+  font-family: var(--data);
+  font-size: 0.65rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--rule);
+}
+
+.components td {
+  padding: 0.7rem 0;
+  border-bottom: 1px solid var(--rule);
+  vertical-align: middle;
+}
+
+.components td.num,
+.components th.num {
+  text-align: right;
+  font-family: var(--data);
+  font-variant-numeric: tabular-nums;
+}
+
+.bar {
+  display: block;
+  height: 6px;
+  min-width: 2px;
+  border-radius: 1px;
+  background: var(--calm);
+}
+
+.bar-cell {
+  width: 34%;
+  padding-right: 1rem;
+}
+
+.stale {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+/* --- Alerts --------------------------------------------------------------- */
+
+.alert-item {
+  display: flex;
+  gap: 1rem;
+  padding: 0.9rem 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.alert-item:last-child {
+  border-bottom: 0;
+}
+
+.alert-stamp {
+  font-family: var(--data);
+  font-size: 0.72rem;
+  color: var(--muted);
+  min-width: 5.5rem;
+  padding-top: 0.15rem;
+}
+
+.alert-headline {
+  font-weight: 600;
+  margin: 0 0 0.15rem;
+}
+
+.alert-body {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+/* --- Empty and error states ----------------------------------------------- */
+
+.state {
+  border: 1px dashed var(--rule);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  color: var(--muted);
+}
+
+.state strong {
+  display: block;
+  color: var(--ink);
+  margin-bottom: 0.35rem;
+}
+
+.state code {
+  font-family: var(--data);
+  font-size: 0.85em;
+  background: var(--ground);
+  padding: 0.1rem 0.3rem;
+  border-radius: 2px;
+}
+
+.footnote {
+  margin-top: 2.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--rule);
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
