@@ -23,6 +23,7 @@ next-env.d.ts
 data/
 *.pdf
 !docs/**/*.pdf
+!backend/tests/fixtures/**/*.pdf
 
 # OS / editors
 .DS_Store

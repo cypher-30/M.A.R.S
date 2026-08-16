@@ -6,7 +6,16 @@ decisions are already settled so you don't re-litigate them.
 **Project:** AEAS — a daily risk score for the WSA Banking ETF on the NSE.
 **Plain-English overview:** `docs/what-this-does.md`
 **Status:** everything that can be built without internet access is built and tested.
-Five pieces need live sources and are stubbed.
+Five pieces needed live sources and were stubbed as of the first build session.
+
+**Update, 2026-08-16 (session 2):** the offline session above couldn't reach the
+internet; this one could. Two of the five stubs are now real, working connectors
+against live public pages, with fixtures and tests (`ingestion/cbk_rates.py`,
+`ingestion/knbs_cpi.py`). A third (`ingestion/bond_yields.py`) got its PDF-parsing
+half built and tested against a real sample, but the fetch half is still blocked —
+see that file's docstring. The other two stubs (`ingestion/nse_prices.py`,
+the LLM calls in `parser/llm_extractor.py`) are genuinely unchanged: they need your
+credentials, which this session didn't have. Full detail in §3 below.
 
 ---
 
@@ -71,18 +80,25 @@ it's the first real feedback the system gives you.
 
 ## 3. What's not done, and why
 
-Five things need something I couldn't see offline. Each is a stub that raises
-`NotImplementedError` with a note.
+Two connectors are now real and tested (session 2, 2026-08-16), built against fixtures
+saved straight from the live sites. One is half-done. Two are unchanged and genuinely
+need your credentials.
 
-| File | What's missing | What unblocks it |
+| File | State | Detail |
 |---|---|---|
-| `ingestion/cbk_rates.py` | Parsing the CBK rates page | Save one copy of the page to `tests/fixtures/` |
-| `ingestion/knbs_cpi.py` | Parsing the KNBS CPI release | Same — save one release |
-| `ingestion/bond_yields.py` | Parsing treasury auction results | Same |
-| `ingestion/nse_prices.py` | Mapping the price API's JSON to `PricePoint` | One sample API response |
-| `parser/llm_extractor.py` (provider calls) | Written but never run against a live API | An API key; expect to adjust response parsing on first call |
+| `ingestion/cbk_rates.py` | **Done, tested.** | Fetches `centralbank.go.ke/rates/central-bank-rate/`, parses the full CBR history table, picks the row with the newest date. Verified live: the table is not in date order (its last three rows on a live fetch were Feb/Jun/Apr 2026), so the parser compares dates rather than trusting row order — see `test_ingestion_cbk_rates.py`. |
+| `ingestion/knbs_cpi.py` | **Done, tested.** | Fetches KNBS's CPI landing page, follows the newest linked monthly report, regexes the headline inflation sentence. `knbs.or.ke` serves a broken TLS chain (missing intermediate cert); verification defaults to **on** (`KNBS_VERIFY_TLS=true` in `.env`) and this connector will fail closed until you deliberately opt out — see `config.py`. |
+| `ingestion/bond_yields.py` | **Half done.** | `_parse_pdf_text()` is real and tested against a saved weekly auction-results PDF — it correctly pulls T91/T364 weighted-average accepted-bid rates. `fetch()` still raises `NotImplementedError`: CBK's results table on their site loads via client-side AJAX, so there's no URL for "this week's PDF" in the static page. Next step is in the module docstring — check the page's Network tab in a real browser for the AJAX endpoint. |
+| `ingestion/nse_prices.py` | Stub, unchanged. | Needs `MYSTOCKS_API_KEY` and one sample API response. |
+| `parser/llm_extractor.py` (provider calls) | Stub, unchanged. | Needs an OpenAI/Gemini key and a real bank quarterly PDF; expect to adjust response parsing on first live call. |
 
-The pattern for each: **save a real sample into `backend/tests/fixtures/` first, write the
+Fixtures used above live in `backend/tests/fixtures/`: `cbk_rates_page.html`,
+`knbs_cpi_landing.html`, `knbs_cpi_report.html`, `cbk_treasury_bill_results_sample.pdf`.
+(Note: the original `.gitignore` blanket-excluded `*.pdf`, which would have silently
+dropped the treasury-bill fixture — it now has an exception for
+`backend/tests/fixtures/**/*.pdf`.)
+
+The pattern for what's left: **save a real sample into `backend/tests/fixtures/` first, write the
 parser against the file, then wire it up.** That keeps every connector testable offline
 and means a website redesign gives you a failing test instead of a silently wrong score.
 
@@ -90,14 +106,18 @@ and means a website redesign gives you a failing test instead of a silently wron
 
 ## 4. Next actions, in order
 
+Steps 2 and 4's CBR/CPI legs are done as of session 2 (2026-08-16) — see §3. What's left:
+
 1. **Register for market data** and get an LLM API key. Do this first — approval time
    is the most common schedule slip, and everything else can proceed while you wait.
-2. **Save fixtures.** One CBK rates page, one KNBS CPI release, one treasury auction
-   result, one bank quarterly PDF → `backend/tests/fixtures/`.
-3. **Build the price connector first.** It's a clean JSON API and it proves the whole
-   fetch → upsert → score path with real data.
-4. **Then CBR, then treasury yields, then CPI.** One at a time: write `fetch()`, write a
-   test against the fixture, wire the upsert, confirm `python -m app.cli macro` works.
+2. **Save the remaining fixtures**: one bank quarterly PDF → `backend/tests/fixtures/`
+   (needed for `parser/llm_extractor.py`). The treasury-auction PDF is already saved,
+   but see the `bond_yields.py` docstring for the still-open URL-discovery problem.
+3. **Build the price connector.** It's a clean JSON API and it proves the whole
+   fetch → upsert → score path with real data — do this once `MYSTOCKS_API_KEY` exists.
+4. **Unblock `bond_yields.py`'s URL discovery**, then confirm `python -m app.cli macro`
+   pulls real CBR, CPI, and treasury-yield readings together (CBR and CPI already work;
+   run the CLI now if you want to see them write real rows).
 5. **Run the PDF parser** on a real report: `python -m app.cli parse report.pdf KCB 2026Q1`.
    Check what it extracted against the PDF by eye. Only after you trust it should you set
    `needs_review=false` on a row.

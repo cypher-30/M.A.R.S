@@ -26,6 +26,12 @@ class Settings(BaseSettings):
     # --- Macro data sources -------------------------------------------------
     cbk_rates_url: str = "https://www.centralbank.go.ke"
     knbs_cpi_url: str = "https://www.knbs.or.ke"
+    # knbs.or.ke serves an incomplete certificate chain (verified 2026-08-16:
+    # httpx/curl report "unable to get local issuer certificate" — a missing
+    # intermediate on their end). Defaults to secure; set false only if you've
+    # confirmed the failure is this same chain issue and accept the risk for
+    # this read-only public-data fetch.
+    knbs_verify_tls: bool = True
 
     # --- Document parser ----------------------------------------------------
     llm_provider: Literal["openai", "gemini"] = "openai"
