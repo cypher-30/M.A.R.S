@@ -1,4 +1,4 @@
-# AEAS — Algorithmic ETF Analytics & Alert System
+# MARS — Market Analysis & Risk System
 
 A daily risk reading for the WSA Banking ETF on the Nairobi Securities Exchange.
 
@@ -26,7 +26,7 @@ Every number a human might disagree with lives in one file:
 ## Repository layout
 
 ```
-aeas/
+MARS/
 ├── README.md
 ├── docker-compose.yml          Postgres for local development
 ├── HANDOFF.md                  Start here: state of play and what to do next

@@ -1,5 +1,5 @@
 /* ---------------------------------------------------------------------------
-   AEAS design tokens.
+   MARS design tokens.
 
    The dashboard is an instrument, not a marketing page: cool sage ground,
    forest ink, and three status colours that are only ever used to mean
@@ -7,7 +7,7 @@
    readings don't jitter as they update.
 
    Shell shape (sidebar + card grid) follows the references in
-   `UI suggestions/` — restyled onto AEAS's real sections only. No nav item
+   `UI suggestions/` — restyled onto MARS's real sections only. No nav item
    links anywhere the app doesn't actually go.
 --------------------------------------------------------------------------- */
 

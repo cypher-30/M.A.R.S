@@ -7,7 +7,7 @@ from app.config import settings
 
 def compose(headline: str, body: str) -> EmailMessage:
     message = EmailMessage()
-    message["Subject"] = f"[AEAS] {headline}"
+    message["Subject"] = f"[{settings.app_name}] {headline}"
     message["From"] = settings.smtp_user
     message["To"] = settings.alert_email_to
     message.set_content(body)

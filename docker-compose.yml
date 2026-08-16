@@ -3,20 +3,20 @@
 services:
   db:
     image: postgres:16-alpine
-    container_name: aeas-db
+    container_name: mars-db
     environment:
-      POSTGRES_USER: aeas
-      POSTGRES_PASSWORD: aeas
-      POSTGRES_DB: aeas
+      POSTGRES_USER: mars
+      POSTGRES_PASSWORD: mars
+      POSTGRES_DB: mars
     ports:
       - "5432:5432"
     volumes:
-      - aeas-pgdata:/var/lib/postgresql/data
+      - mars-pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U aeas"]
+      test: ["CMD-SHELL", "pg_isready -U mars"]
       interval: 5s
       timeout: 5s
       retries: 10
 
 volumes:
-  aeas-pgdata:
+  mars-pgdata:

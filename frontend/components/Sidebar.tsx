@@ -1,5 +1,5 @@
 /**
- * AEAS is a single-page dashboard, not a multi-section app, so this isn't a
+ * MARS is a single-page dashboard, not a multi-section app, so this isn't a
  * router — the links are anchors into the sections on this page. No item
  * points anywhere the app doesn't actually go.
  */
@@ -14,9 +14,9 @@ export function Sidebar() {
   return (
     <aside className="sidebar">
       <div className="brand">
-        <div className="brand-mark">AE</div>
+        <div className="brand-mark">M</div>
         <div>
-          <div className="brand-name">AEAS</div>
+          <div className="brand-name">MARS</div>
           <div className="brand-sub">Sector Health</div>
         </div>
       </div>

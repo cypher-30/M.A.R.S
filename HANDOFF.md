@@ -3,7 +3,7 @@
 Read this first. It says what state the project is in, what to do next, and which
 decisions are already settled so you don't re-litigate them.
 
-**Project:** AEAS — a daily risk score for the WSA Banking ETF on the NSE.
+**Project:** MARS (Market Analysis & Risk System) — a daily risk score for the WSA Banking ETF on the NSE.
 **Plain-English overview:** `docs/what-this-does.md`
 **Status:** everything that can be built without internet access is built and tested.
 Five pieces needed live sources and were stubbed as of the first build session.
@@ -16,6 +16,16 @@ half built and tested against a real sample, but the fetch half is still blocked
 see that file's docstring. The other two stubs (`ingestion/nse_prices.py`,
 the LLM calls in `parser/llm_extractor.py`) are genuinely unchanged: they need your
 credentials, which this session didn't have. Full detail in §3 below.
+
+**Update, 2026-08-17 (session 3):** renamed the project from AEAS to **MARS**
+(Market Analysis & Risk System) everywhere — code, docs, `.env`, Postgres
+role/db, dashboard branding. Also flattened the repo: it used to live at
+`.../ETF market/aeas/`; it's now just `/var/www/html/MARS/` with `backend/`
+and `frontend/` directly inside, no extra wrapper folder. If a Postgres role
+was created earlier as `aeas`/`aeas`, it's unused now — this session's setup
+commands create a fresh `mars`/`mars` role and database instead (see §1 and
+the case-folding note in §6 — `CREATE USER MARS` actually creates a role
+named `mars`, which is what tripped up the first setup attempt).
 
 ---
 
@@ -156,6 +166,13 @@ Steps 2 and 4's CBR/CPI legs are done as of session 2 (2026-08-16) — see §3. 
 
 - **`.env` is read relative to the working directory.** Run `uvicorn` and the CLI from
   `backend/`, not from the repo root.
+- **Unquoted Postgres identifiers are folded to lowercase.** `CREATE USER MARS` really
+  creates a role named `mars`, not `MARS` — but a quoted password literal like
+  `'MARS'` keeps its case exactly as typed. This is what broke the first setup attempt:
+  `DATABASE_URL` was pointed at user `aeas`, and separately the actual role ended up
+  lowercase `mars` regardless of how it was typed at the `CREATE USER` prompt. Keep
+  `.env`'s `DATABASE_URL` user/db lowercase (`mars`) to match, whatever case you type
+  into `psql`.
 - **Seeded demo data looks completely real on the dashboard.** Clear it before you look
   at anything and draw a conclusion.
 - **The weights are untested guesses.** Nothing has been validated against Kenyan market

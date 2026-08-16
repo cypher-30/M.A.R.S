@@ -9,13 +9,16 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     # --- Core ---------------------------------------------------------------
-    app_name: str = "AEAS"
+    app_name: str = "MARS"
     cors_allowed_origins: str = "http://localhost:3000"
     # Cron jobs stay off until you have working connectors. Flip to false
     # in .env once ingestion is real.
     scheduler_paused: bool = True
     environment: Literal["local", "staging", "production"] = "local"
-    database_url: str = "postgresql+psycopg://aeas:aeas@localhost:5432/aeas"
+    # Password case matters here: `CREATE USER MARS` folds the role name to
+    # lowercase `mars` (unquoted identifiers always do), but `PASSWORD 'MARS'`
+    # is a string literal and keeps its case exactly as typed.
+    database_url: str = "postgresql+psycopg://mars:MARS@localhost:5432/mars"
 
     # --- Market data --------------------------------------------------------
     mystocks_api_key: str = ""
