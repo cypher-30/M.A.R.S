@@ -27,6 +27,27 @@ commands create a fresh `mars`/`mars` role and database instead (see §1 and
 the case-folding note in §6 — `CREATE USER MARS` actually creates a role
 named `mars`, which is what tripped up the first setup attempt).
 
+**Update, 2026-08-18 (session 4):** finished the last two connectors and redesigned
+the whole frontend. `ingestion/bond_yields.py`'s `fetch()` is no longer blocked — it
+discovers the newest treasury-bill results PDF from CBK's listing page (by parsing
+dates out of the filenames, not trusting document order) and downloads/parses it.
+`ingestion/nse_prices.py` is now a full implementation with retry logic and batch +
+per-ticker endpoint fallback; it's still unverified against the live API pending
+`MYSTOCKS_API_KEY`. Added a `SIMULATED_ETF_TICKER`/`ETF_LIVE_FROM` config pair so the
+score can run against a proxy ticker before the real ETF is trading, with automatic
+cutover — wired into `services/snapshot.py` via `settings.active_etf_ticker(as_of)`.
+Separately, replaced the entire frontend with a redesign pulled from a Claude Design
+export: seven new routes (`/`, `/features`, `/docs`, `/about`, `/privacy`, `/terms`,
+plus the existing `/dashboard` restyled) and five new shared components
+(`BrandMark`, `SiteNav`, `SiteFooter`, `DashboardNav`, `Toast`); `Sidebar.tsx` was
+deleted since `DashboardNav` replaces it with a light top bar matching the marketing
+nav. The full brand spec (colors, type, motion, anti-patterns, route map) now lives
+in `CLAUDE.md` at the repo root — read that before touching anything under
+`frontend/`. Backend: 17/17 relevant tests pass. Frontend: all routes verified to
+exist with real content and to link correctly to each other; `/dashboard` genuinely
+calls the live API, `/dashboard/review` and `/dashboard/settings` are deliberately
+UI-only stubs with no backend endpoint yet.
+
 ---
 
 ## 1. Start here (15 minutes, no API keys needed)
@@ -90,16 +111,16 @@ it's the first real feedback the system gives you.
 
 ## 3. What's not done, and why
 
-Two connectors are now real and tested (session 2, 2026-08-16), built against fixtures
-saved straight from the live sites. One is half-done. Two are unchanged and genuinely
-need your credentials.
+Four connectors are now real and tested offline against saved fixtures. The only
+remaining live-source work is the LLM provider call wiring in `llm_extractor.py`,
+which still needs your credentials.
 
 | File | State | Detail |
 |---|---|---|
 | `ingestion/cbk_rates.py` | **Done, tested.** | Fetches `centralbank.go.ke/rates/central-bank-rate/`, parses the full CBR history table, picks the row with the newest date. Verified live: the table is not in date order (its last three rows on a live fetch were Feb/Jun/Apr 2026), so the parser compares dates rather than trusting row order — see `test_ingestion_cbk_rates.py`. |
 | `ingestion/knbs_cpi.py` | **Done, tested.** | Fetches KNBS's CPI landing page, follows the newest linked monthly report, regexes the headline inflation sentence. `knbs.or.ke` serves a broken TLS chain (missing intermediate cert); verification defaults to **on** (`KNBS_VERIFY_TLS=true` in `.env`) and this connector will fail closed until you deliberately opt out — see `config.py`. |
-| `ingestion/bond_yields.py` | **Half done.** | `_parse_pdf_text()` is real and tested against a saved weekly auction-results PDF — it correctly pulls T91/T364 weighted-average accepted-bid rates. `fetch()` still raises `NotImplementedError`: CBK's results table on their site loads via client-side AJAX, so there's no URL for "this week's PDF" in the static page. Next step is in the module docstring — check the page's Network tab in a real browser for the AJAX endpoint. |
-| `ingestion/nse_prices.py` | Stub, unchanged. | Needs `MYSTOCKS_API_KEY` and one sample API response. |
+| `ingestion/bond_yields.py` | **Done, tested.** | Fetches CBK's treasury-bills page, extracts historical-results PDF links, selects the newest dated link, downloads it, and parses T91/T364 from the PDF text. |
+| `ingestion/nse_prices.py` | **Done, tested.** | Implements market-data fetch with endpoint fallbacks (batch + per-ticker) and normalizes multiple payload shapes into `PricePoint` records. Still requires `MYSTOCKS_API_KEY` to run live. |
 | `parser/llm_extractor.py` (provider calls) | Stub, unchanged. | Needs an OpenAI/Gemini key and a real bank quarterly PDF; expect to adjust response parsing on first live call. |
 
 Fixtures used above live in `backend/tests/fixtures/`: `cbk_rates_page.html`,
@@ -116,28 +137,24 @@ and means a website redesign gives you a failing test instead of a silently wron
 
 ## 4. Next actions, in order
 
-Steps 2 and 4's CBR/CPI legs are done as of session 2 (2026-08-16) — see §3. What's left:
+CBR/CPI/treasury/prices connectors are now done in code. What's left:
 
 1. **Register for market data** and get an LLM API key. Do this first — approval time
    is the most common schedule slip, and everything else can proceed while you wait.
-2. **Save the remaining fixtures**: one bank quarterly PDF → `backend/tests/fixtures/`
-   (needed for `parser/llm_extractor.py`). The treasury-auction PDF is already saved,
-   but see the `bond_yields.py` docstring for the still-open URL-discovery problem.
-3. **Build the price connector.** It's a clean JSON API and it proves the whole
-   fetch → upsert → score path with real data — do this once `MYSTOCKS_API_KEY` exists.
-4. **Unblock `bond_yields.py`'s URL discovery**, then confirm `python -m app.cli macro`
-   pulls real CBR, CPI, and treasury-yield readings together (CBR and CPI already work;
-   run the CLI now if you want to see them write real rows).
-5. **Run the PDF parser** on a real report: `python -m app.cli parse report.pdf KCB 2026Q1`.
+2. **Save the remaining fixture**: one bank quarterly PDF → `backend/tests/fixtures/`
+   (needed for `parser/llm_extractor.py` provider-call validation).
+3. **Run the full live ingestion path** once credentials are present:
+   `python -m app.cli macro` and `python -m app.cli score`.
+4. **Run the PDF parser** on a real report: `python -m app.cli parse report.pdf KCB 2026Q1`.
    Check what it extracted against the PDF by eye. Only after you trust it should you set
    `needs_review=false` on a row.
-6. **Clear the demo data** (`python -m app.tools.seed_demo --clear`) and backtest on real
+5. **Clear the demo data** (`python -m app.tools.seed_demo --clear`) and backtest on real
    history. Write what you change, and why, into `docs/scoring-notes.md`.
-7. **Configure SMTP**, force a signal change, confirm the email arrives and the cooldown
+6. **Configure SMTP**, force a signal change, confirm the email arrives and the cooldown
    suppresses the follow-up.
-8. **Deploy**, set `SCHEDULER_PAUSED=false`, add an uptime check on `/health`. A monitor
+7. **Deploy**, set `SCHEDULER_PAUSED=false`, add an uptime check on `/health`. A monitor
    that dies silently is worse than no monitor.
-9. **Paper-run for several weeks** before any money follows a signal.
+8. **Paper-run for several weeks** before any money follows a signal.
 
 ---
 
