@@ -1,6 +1,7 @@
 """Stale data must not masquerade as current data."""
 from datetime import date
 
+from app.config import settings
 from app.db import repository as repo
 from app.ingestion.base import MacroPoint, PricePoint
 from app.services.snapshot import build_snapshot
@@ -40,8 +41,9 @@ def test_two_confirmed_banks_are_averaged(session):
 
 
 def test_momentum_uses_the_closest_earlier_close(session):
-    repo.upsert_price_point(session, PricePoint("WSA", date(2026, 4, 30), 100.0))
-    repo.upsert_price_point(session, PricePoint("WSA", date(2026, 6, 1), 110.0))
+    etf_ticker = settings.active_etf_ticker(date(2026, 6, 1))
+    repo.upsert_price_point(session, PricePoint(etf_ticker, date(2026, 4, 30), 100.0))
+    repo.upsert_price_point(session, PricePoint(etf_ticker, date(2026, 6, 1), 110.0))
     session.commit()
     build = build_snapshot(session, as_of=date(2026, 6, 1))
     assert build.snapshot.etf_price == 110.0

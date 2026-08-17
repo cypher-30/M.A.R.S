@@ -41,6 +41,7 @@ def _macro_value(session: Session, code: str, as_of: date, build: SnapshotBuild)
 def build_snapshot(session: Session, as_of: date | None = None) -> SnapshotBuild:
     as_of = as_of or date.today()
     build = SnapshotBuild(snapshot=IndicatorSnapshot(as_of=as_of))
+    etf_ticker = settings.active_etf_ticker(as_of)
 
     cbr = _macro_value(session, "CBR", as_of, build)
     cpi = _macro_value(session, "CPI", as_of, build)
@@ -56,23 +57,25 @@ def build_snapshot(session: Session, as_of: date | None = None) -> SnapshotBuild
     else:
         avg_npl = round(sum(ratios) / len(ratios), 2)
 
-    latest_price = repo.price_on_or_before(session, settings.etf_ticker, as_of)
+    latest_price = repo.price_on_or_before(session, etf_ticker, as_of)
     if latest_price is None:
-        build.missing.append("ETF price")
+        build.missing.append(f"ETF price ({etf_ticker})")
         price_now = price_then = None
     else:
         price_limit = MAX_STALENESS_DAYS.get("MOMENTUM", 7)
         if repo.is_stale(latest_price.traded_on, as_of, price_limit):
-            build.dropped_as_stale.append(f"ETF price (last traded {latest_price.traded_on})")
+            build.dropped_as_stale.append(
+                f"ETF price {etf_ticker} (last traded {latest_price.traded_on})"
+            )
             price_now = price_then = None
         else:
             price_now = latest_price.close
             earlier = repo.price_on_or_before(
-                session, settings.etf_ticker, as_of - timedelta(days=MOMENTUM_WINDOW_DAYS)
+                session, etf_ticker, as_of - timedelta(days=MOMENTUM_WINDOW_DAYS)
             )
             price_then = earlier.close if earlier else None
             if earlier is None:
-                build.missing.append("ETF price 30 days ago")
+                build.missing.append(f"ETF price 30 days ago ({etf_ticker})")
 
     build.snapshot = IndicatorSnapshot(
         cbr=cbr,

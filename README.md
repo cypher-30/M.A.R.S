@@ -156,6 +156,7 @@ The ones you'll touch first:
 |---|---|
 | `DATABASE_URL` | Postgres connection string |
 | `MYSTOCKS_API_KEY` | Price data for the ETF and constituents |
+| `SIMULATED_ETF_TICKER` / `ETF_LIVE_FROM` | Optional pre-launch proxy ticker with automatic cutover date |
 | `LLM_PROVIDER` / `OPENAI_API_KEY` / `GEMINI_API_KEY` | The document parser |
 | `SMTP_*` / `ALERT_EMAIL_TO` | Where alerts are delivered |
 | `BROKERAGE_EXIT_FEE_PCT` | Your actual all-in exit cost — check your broker's schedule |

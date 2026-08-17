@@ -1,4 +1,5 @@
 """Application settings. Every value comes from the environment or .env."""
+from datetime import date
 from functools import lru_cache
 from typing import Literal
 
@@ -24,6 +25,8 @@ class Settings(BaseSettings):
     mystocks_api_key: str = ""
     mystocks_base_url: str = "https://api.mystocks.co.ke"
     etf_ticker: str = "WSA"
+    simulated_etf_ticker: str = ""
+    etf_live_from: date | None = None
     constituent_tickers: str = "KCB,EQTY,COOP,ABSA,SCBK,NCBA,SBIC,IMH"
 
     # --- Macro data sources -------------------------------------------------
@@ -60,6 +63,15 @@ class Settings(BaseSettings):
     @property
     def constituents(self) -> list[str]:
         return [t.strip().upper() for t in self.constituent_tickers.split(",") if t.strip()]
+
+    def active_etf_ticker(self, as_of: date | None = None) -> str:
+        official = self.etf_ticker.strip().upper()
+        simulated = self.simulated_etf_ticker.strip().upper()
+        if simulated and self.etf_live_from is not None:
+            observed_on = as_of or date.today()
+            if observed_on < self.etf_live_from:
+                return simulated
+        return official
 
 
 @lru_cache
