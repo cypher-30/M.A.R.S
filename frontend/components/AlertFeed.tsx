@@ -2,10 +2,10 @@
 
 import type { Alert } from "@/lib/types";
 
-const LEVEL_COLOR: Record<Alert["level"], string> = {
-  INFO: "var(--muted)",
-  WARNING: "var(--watch)",
-  CRITICAL: "var(--risk)",
+const SIGNAL_COLOR: Record<Alert["signal"], string> = {
+  BUY: "var(--calm)",
+  HOLD: "var(--watch)",
+  SELL: "var(--risk)",
 };
 
 export function AlertFeed({ alerts }: { alerts: Alert[] }) {
@@ -23,20 +23,19 @@ export function AlertFeed({ alerts }: { alerts: Alert[] }) {
     <div className="alert-list">
       {alerts.map((alert) => (
         <div className="alert-item" key={alert.id}>
-          <span className="alert-dot" style={{ background: LEVEL_COLOR[alert.level] }} />
-          <div>
-            <div className="alert-stamp">
-              {new Date(alert.created_at).toLocaleDateString("en-KE", {
-                day: "2-digit",
-                month: "short",
-                year: "numeric",
-              })}
-              {" · "}
+          <div className="alert-stamp">
+            {new Date(alert.created_at).toLocaleDateString("en-KE", {
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+            })}
+            {" · "}
+            <span className="alert-signal" style={{ color: SIGNAL_COLOR[alert.signal] }}>
               {alert.signal}
-            </div>
-            <p className="alert-headline">{alert.headline}</p>
-            <p className="alert-body">{alert.body}</p>
+            </span>
           </div>
+          <p className="alert-headline">{alert.headline}</p>
+          <p className="alert-body">{alert.body}</p>
         </div>
       ))}
     </div>
