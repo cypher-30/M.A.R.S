@@ -1,4 +1,4 @@
-# MARS — Market Analysis & Risk System
+# MARS  Market Analysis & Risk System
 
 A daily risk reading for the WSA Banking ETF on the Nairobi Securities Exchange.
 
